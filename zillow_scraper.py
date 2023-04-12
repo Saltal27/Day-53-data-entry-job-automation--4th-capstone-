@@ -26,6 +26,7 @@ class Zillow_Soup:
         self.rentals_dict = {}
 
     def scrape(self):
+        """This method scrapes 'Zillow' website and prepares the zillow soup"""
         self.driver = webdriver.Chrome()
         self.driver.get(ZILLOW_URL)
 
@@ -35,20 +36,28 @@ class Zillow_Soup:
         self.soup = BeautifulSoup(self.driver.page_source, 'lxml')
 
     def scrape_rentals(self):
-        """This method uses the beautiful soup module to get a list of the first 50 rentals that match the specified
-        filters."""
+        """This method uses the beautiful soup module to get a list of the first page rentals that match the
+        specified filters."""
         self.rentals_list = self.soup.select(selector=".List-c11n-8-85-1__sc-1smrmqp-0 "
                                                       ".ListItem-c11n-8-85-1__sc-10e22w8-0")
-        print(len(self.rentals_list))
 
-    def generate_rentals_dict(self):
+    def get_rentals_prices(self):
+        """This method gets every rental price and adds it to the corresponding rental in the rentals' dictionary
+        and deletes the ads from the rentals list."""
+
+        # a variable that acts as an index
         n = 0
+
+        # a list that contains the indexes of the ads to delete them after finding them
+        ads_indexes = []
         for rental in self.rentals_list:
             rental_price = 0
+
             try:
                 price = rental.find('span', attrs={'data-test': 'property-card-price'}).get_text()
             except AttributeError:
-                del self.rentals_list[self.rentals_list.index(rental)]
+                # this is an ad
+                ads_indexes.append(self.rentals_list.index(rental))
             else:
                 if "+" in price:
                     rental_price = price.split("+")[0]
@@ -60,11 +69,37 @@ class Zillow_Soup:
                 }
                 n += 1
 
-        print(self.rentals_dict)
-        print(len(self.rentals_list))
+        # deleting the ads from the rentals list
+        for index in ads_indexes:
+            del self.rentals_list[index - ads_indexes.index(index)]
 
+    def get_rentals_addresses(self):
+        """This method gets every rental address and adds it to the corresponding rental in the rentals' dictionary."""
 
-soup = Zillow_Soup()
-soup.scrape_rentals()
-soup.generate_rentals_dict()
+        # a variable that acts as an index
+        n = 0
+        for rental in self.rentals_list:
+            rental_address = rental.find('address', attrs={'data-test': 'property-card-addr'}).get_text()
+            rental_dict = self.rentals_dict[n]
+            rental_dict["rental_address"] = rental_address
+            n += 1
 
+    def get_rentals_links(self):
+        """This method gets every rental link and adds it to the corresponding rental in the rentals' dictionary."""
+
+        # a variable that acts as an index
+        n = 0
+        for rental in self.rentals_list:
+            link = rental.find('a', attrs={'data-test': 'property-card-link'})
+            rental_link = link["href"]
+            if "https://www.zillow.com" not in rental_link:
+                rental_link = "https://www.zillow.com" + rental_link
+            rental_dict = self.rentals_dict[n]
+            rental_dict["rental_link"] = rental_link
+            n += 1
+
+    def generate_rentals_dict(self):
+        """This method generates the rentals dictionary that contains each rental price, address and its link."""
+        self.get_rentals_prices()
+        self.get_rentals_addresses()
+        self.get_rentals_links()

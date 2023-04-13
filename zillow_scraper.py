@@ -81,7 +81,7 @@ class Zillow_Soup:
         for rental in self.rentals_list:
             rental_address = rental.find('address', attrs={'data-test': 'property-card-addr'}).get_text()
             rental_dict = self.rentals_dict[n]
-            rental_dict["rental_address"] = rental_address
+            rental_dict["rental address"] = rental_address
             n += 1
 
     def get_rentals_links(self):
@@ -95,7 +95,7 @@ class Zillow_Soup:
             if "https://www.zillow.com" not in rental_link:
                 rental_link = "https://www.zillow.com" + rental_link
             rental_dict = self.rentals_dict[n]
-            rental_dict["rental_link"] = rental_link
+            rental_dict["rental link"] = rental_link
             n += 1
 
     def generate_rentals_dict(self):

@@ -24,3 +24,4 @@ for rental in zillow_soup.rentals_dict:
     property_price = zillow_soup.rentals_dict[rental]["rental price"]
     property_link = zillow_soup.rentals_dict[rental]["rental link"]
     google_forms_filler.fill_form(property_address, property_price, property_link)
+google_forms_filler.driver.quit()
